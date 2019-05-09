@@ -289,72 +289,38 @@ struct QNode *deQueue(struct Queue *q)
 int sem_init(sem_t **sp, int sem_count)
 {
     *sp = malloc(sizeof(sem_t));
-
     (*sp)->count = sem_count;
-    
     (*sp)->q = createQueue();
 }
 
 void sem_wait(sem_t *sem)
 {
-    //sighold();
-    
     tcb *tmp;
-    
     sem->count--;
     
     if(sem->count < 0)
     {
         tmp = running;
-        
         enQueue(sem->q, tmp);
-        
         struct QNode *new_running = deQueue(ready);
-        
         running = new_running->tcb;
-        
-        free(new_running);
-        
         swapcontext(tmp->thread_context, running->thread_context);
-
-       // sigrelse();
-        
-        return;
-    }
-    
-    else if(sem->count >= 0)
-    {
-        //sigrelse();
-        
+        free(new_running);
         return;
     }
 }
 
 void sem_signal(sem_t *sem)
 {
-    //sighold();
-    
     sem->count++;
-    
     if(sem->count <= 0)
     {
-        struct QNode *now_ready = deQueue(sem->q);
+        struct QNode *ready_q = deQueue(sem->q);
+        enQueue(ready, ready_q->tcb);
         
-        enQueue(ready, now_ready->tcb);
-        free(now_ready);
-        
-    //    sigrelse();
-        
+        free(ready_q);
         return;
     }
-    
-   // else
-   // {
-       // sigrelse();
-        
-   //     return;
-   // }
-    
 }
 
 void sem_destroy(sem_t **sem)
@@ -366,18 +332,19 @@ void sem_destroy(sem_t **sem)
     {
         tmp = qntmp->tcb;
         
-        if(tmp->thread_id > 0) {free(tmp->thread_context->uc_stack.ss_sp);}
-        free(tmp->thread_context);
-        free(tmp);
+        if(tmp->thread_id > 0)
+        {
+            free(tmp->thread_context->uc_stack.ss_sp);
+        }
         
         free(qntmp);
-        
+        free(tmp->thread_context);
+        free(tmp);
         qntmp = qntmp->next;
     }
-    
+
     free((*sem)->q);
     free(*sem);
-    
     return;
 }
 
