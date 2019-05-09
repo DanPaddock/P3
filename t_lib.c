@@ -324,7 +324,7 @@ void sem_wait(sem_t *sem)
     
     else if(sem->count >= 0)
     {
-        sigrelse();
+        //sigrelse();
         
         return;
     }
