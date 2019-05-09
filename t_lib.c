@@ -297,7 +297,7 @@ int sem_init(sem_t **sp, int sem_count)
 
 void sem_wait(sem_t *sem)
 {
-    sighold();
+    //sighold();
     
     tcb *tmp;
     
@@ -317,7 +317,7 @@ void sem_wait(sem_t *sem)
         
         swapcontext(tmp->thread_context, running->thread_context);
 
-        sigrelse();
+       // sigrelse();
         
         return;
     }
@@ -332,28 +332,28 @@ void sem_wait(sem_t *sem)
 
 void sem_signal(sem_t *sem)
 {
-    sighold();
+    //sighold();
     
     sem->count++;
     
-    if(s->count <= 0)
+    if(sem->count <= 0)
     {
         struct QNode *now_ready = deQueue(sem->q);
         
         enQueue(ready, now_ready->tcb);
         free(now_ready);
         
-        sigrelse();
+    //    sigrelse();
         
         return;
     }
     
-    else
-    {
-        sigrelse();
+   // else
+   // {
+       // sigrelse();
         
-        return;
-    }
+   //     return;
+   // }
     
 }
 
